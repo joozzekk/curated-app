@@ -1,4 +1,5 @@
-import { mount } from '@vue/test-utils'
+import { cleanup, render, screen } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import GarmentModal from './GarmentModal.vue'
 import { createPinia, setActivePinia } from 'pinia'
@@ -24,10 +25,9 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
+const mockToast = { show: vi.fn() }
 vi.mock('@/stores/toast', () => ({
-  useToastStore: () => ({
-    show: vi.fn(),
-  }),
+  useToastStore: () => mockToast,
 }))
 
 describe('GarmentModal.vue', () => {
@@ -44,51 +44,53 @@ describe('GarmentModal.vue', () => {
   }
 
   beforeEach(() => {
+    cleanup()
     setActivePinia(createPinia())
-    document.body.innerHTML = ''
+    vi.clearAllMocks()
   })
 
-  it('does not render content when isOpen is false', () => {
-    mount(GarmentModal, {
+  it('does not render when isOpen is false', () => {
+    render(GarmentModal, {
       props: { garment: mockGarment, isOpen: false },
     })
 
-    const modalContainer = document.body.querySelector('.fixed')
-    expect(modalContainer).toBeNull()
+    expect(screen.queryByText(/hermès/i)).toBeNull()
   })
 
-  it('renders garment details correctly when open', async () => {
-    mount(GarmentModal, {
+  it('renders garment details correctly when open', () => {
+    render(GarmentModal, {
       props: { garment: mockGarment, isOpen: true },
     })
 
-    expect(document.body.textContent).toContain('Hermès')
-    expect(document.body.textContent).toContain('Silk Scarf')
-    expect(document.body.textContent).toContain('£200')
+    expect(screen.getByText(/hermès/i)).toBeTruthy()
+    expect(screen.getByText(/silk scarf/i)).toBeTruthy()
+    expect(screen.getByText(/£200/i)).toBeTruthy()
   })
 
-  it('emits close event when clicking the backdrop', async () => {
-    const wrapper = mount(GarmentModal, {
+  it('emits close event when clicking the close button', async () => {
+    const user = userEvent.setup()
+    const { emitted } = render(GarmentModal, {
       props: { garment: mockGarment, isOpen: true },
     })
 
-    const backdrop = document.querySelector('.bg-black\\/40')
-    if (backdrop) {
-      ;(backdrop as HTMLElement).click()
-      expect(wrapper.emitted()).toHaveProperty('close')
-    }
+    const closeBtn = screen.getByRole('button', { name: /close/i })
+    await user.click(closeBtn)
+
+    expect(emitted()).toHaveProperty('close')
   })
 
-  it('triggers update flow when "Mark as Worn" is clicked', async () => {
-    const wrapper = mount(GarmentModal, {
+  it('triggers update flow when "Mark as Worn Today" is clicked', async () => {
+    const user = userEvent.setup()
+    const { emitted } = render(GarmentModal, {
       props: { garment: mockGarment, isOpen: true },
     })
 
-    const button = document.querySelector('button.border-brand-black') as HTMLElement
-    button.click()
+    const updateBtn = screen.getByRole('button', { name: /mark as worn today/i })
+    await user.click(updateBtn)
 
     await vi.waitFor(() => {
-      expect(wrapper.emitted()).toHaveProperty('updated')
+      expect(emitted()).toHaveProperty('updated')
+      expect(mockToast.show).toHaveBeenCalledWith('Garment updated!', 'success')
     })
   })
 })

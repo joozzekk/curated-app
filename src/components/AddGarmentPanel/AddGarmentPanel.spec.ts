@@ -1,4 +1,5 @@
-import { mount } from '@vue/test-utils'
+import { cleanup, render, screen } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import AddGarmentPanel from './AddGarmentPanel.vue'
 import { createPinia, setActivePinia } from 'pinia'
@@ -11,81 +12,74 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
-const mockToast = {
-  show: vi.fn(),
-}
+const mockToast = { show: vi.fn() }
 vi.mock('@/stores/toast', () => ({
   useToastStore: () => mockToast,
 }))
 
 describe('AddGarmentPanel.vue', () => {
   beforeEach(() => {
+    cleanup()
     setActivePinia(createPinia())
-    document.body.innerHTML = ''
     vi.clearAllMocks()
   })
 
-  it('renders correctly when open', () => {
-    mount(AddGarmentPanel, {
+  const renderPanel = () =>
+    render(AddGarmentPanel, {
       props: { isOpen: true },
+      global: { plugins: [createPinia()] },
     })
 
-    expect(document.body.textContent).toContain('Add New Piece')
-    expect(document.body.querySelector('input[type="text"]')).toBeTruthy()
+  it('renders correctly when open', () => {
+    renderPanel()
+    expect(screen.getByRole('heading', { name: /add new piece/i })).toBeTruthy()
+    expect(screen.getByLabelText(/item name/i)).toBeTruthy()
   })
 
   it('toggles the custom category dropdown', async () => {
-    mount(AddGarmentPanel, {
-      props: { isOpen: true },
-    })
+    const user = userEvent.setup()
+    renderPanel()
 
-    const trigger = document.body.querySelector('.cursor-pointer') as HTMLElement
-    expect(trigger.textContent).not.toContain('footwear')
+    const dropdownTrigger = screen.getByText(/tops/i)
 
-    trigger.click()
-    expect(trigger.textContent).toContain('tops')
+    expect(screen.queryByText(/footwear/i)).toBeNull()
 
-    trigger.click()
+    await user.click(dropdownTrigger)
+    expect(screen.getByText(/footwear/i)).toBeTruthy()
+
+    await user.click(dropdownTrigger)
     await vi.waitFor(() => {
-      expect(document.body.querySelector('.absolute.z-10')).toBeNull()
+      expect(screen.queryByText(/footwear/i)).toBeNull()
     })
   })
 
   it('shows error toast if required fields are missing', async () => {
-    mount(AddGarmentPanel, {
-      props: { isOpen: true },
-    })
+    const user = userEvent.setup()
+    renderPanel()
 
-    const submitBtn = document.body.querySelector('button[type="submit"]') as HTMLElement
-    submitBtn.click()
+    const submitBtn = screen.getByRole('button', { name: /add to collection/i })
+    await user.click(submitBtn)
 
     expect(mockToast.show).toHaveBeenCalledWith('Please fill in all required fields', 'error')
   })
 
   it('submits correctly when form is valid', async () => {
-    const wrapper = mount(AddGarmentPanel, {
-      props: { isOpen: true },
-    })
+    const user = userEvent.setup()
+    const { emitted } = renderPanel()
 
-    const inputs = document.body.querySelectorAll('input')
+    await user.type(screen.getByLabelText(/item name/i), 'New Jacket')
+    await user.type(screen.getByLabelText(/brand/i), 'Brand X')
+    await user.type(screen.getByLabelText(/image url/i), 'https://image.com/test.jpg')
+    await user.type(screen.getByLabelText(/color/i), 'White')
 
-    const fillInput = (input: HTMLInputElement, value: string) => {
-      input.value = value
-      input.dispatchEvent(new Event('input'))
-    }
+    const priceInput = screen.getByLabelText(/price/i)
+    await user.clear(priceInput)
+    await user.type(priceInput, '40')
 
-    fillInput(inputs[0], 'New Jacket')
-    fillInput(inputs[1], 'Brand X')
-    fillInput(inputs[2], 'https://image.com/test.jpg')
-    fillInput(inputs[3], 'White')
-    fillInput(inputs[4], '40')
-
-    const submitBtn = document.body.querySelector('button[type="submit"]') as HTMLElement
-    submitBtn.click()
+    await user.click(screen.getByRole('button', { name: /add to collection/i }))
 
     await vi.waitFor(() => {
-      expect(wrapper.emitted()).toHaveProperty('added')
-      expect(wrapper.emitted()).toHaveProperty('close')
+      expect(emitted()).toHaveProperty('added')
       expect(mockToast.show).toHaveBeenCalledWith('New garment added to collection', 'success')
     })
   })

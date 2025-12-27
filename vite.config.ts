@@ -13,11 +13,8 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  // @ts-expect-error vitest needs it
+  // @ts-expect-error: vitest needs it
   test: {
-    globals: true,
     environment: 'jsdom',
-    exclude: ['**/node_modules/**', '**/dist/**'],
-    root: fileURLToPath(new URL('./', import.meta.url)),
   },
 })

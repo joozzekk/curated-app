@@ -35,7 +35,7 @@ const markAsWorn = async () => {
   if (error) {
     toast.show('Error updating', ToastType.ERROR)
   } else if (data && data[0]) {
-    toast.show('Updated!', ToastType.SUCCESS)
+    toast.show('Garment updated!', ToastType.SUCCESS)
     emit('updated', data[0])
   }
 }
@@ -81,6 +81,7 @@ const deleteGarment = async () => {
           <button
             @click="closeModal"
             class="fixed md:absolute top-6 right-6 z-50 text-brand-black bg-brand-white/80 p-2 rounded-full md:bg-transparent md:p-0 transition-transform active:scale-90 cursor-pointer"
+            aria-label="Close"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

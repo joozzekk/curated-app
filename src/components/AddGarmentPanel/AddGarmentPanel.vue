@@ -105,10 +105,12 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
               <form @submit.prevent="saveGarment" class="space-y-8 flex-1">
                 <div>
                   <label
+                    for="item-name"
                     class="block text-[10px] uppercase tracking-widest text-brand-dark-gray mb-2"
                     >Item Name</label
                   >
                   <input
+                    id="item-name"
                     v-model="form.name"
                     type="text"
                     class="w-full border-b border-brand-gray bg-transparent py-2 text-sm focus:border-brand-black outline-none transition-colors"
@@ -118,10 +120,12 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 
                 <div>
                   <label
+                    for="brand"
                     class="block text-[10px] uppercase tracking-widest text-brand-dark-gray mb-2"
                     >Brand</label
                   >
                   <input
+                    id="brand"
                     v-model="form.brand"
                     type="text"
                     class="w-full border-b border-brand-gray bg-transparent py-2 text-sm focus:border-brand-black outline-none transition-colors"
@@ -182,10 +186,12 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 
                 <div>
                   <label
+                    for="image url"
                     class="block text-[10px] uppercase tracking-widest text-brand-dark-gray mb-2"
                     >Image URL</label
                   >
                   <input
+                    id="image url"
                     v-model="form.image_url"
                     type="url"
                     class="w-full border-b border-brand-gray bg-transparent py-2 text-sm focus:border-brand-black outline-none transition-colors"
@@ -196,10 +202,12 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
                 <div class="grid grid-cols-2 gap-8">
                   <div>
                     <label
+                      for="color"
                       class="block text-[10px] uppercase tracking-widest text-brand-dark-gray mb-2"
                       >Color</label
                     >
                     <input
+                      id="color"
                       v-model="form.color"
                       type="text"
                       class="w-full border-b border-brand-gray bg-transparent py-2 text-sm focus:border-brand-black outline-none transition-colors"
@@ -208,10 +216,12 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
                   </div>
                   <div>
                     <label
+                      for="price"
                       class="block text-[10px] uppercase tracking-widest text-brand-dark-gray mb-2"
                       >Price (£)</label
                     >
                     <input
+                      id="price"
                       v-model.number="form.purchase_price"
                       type="number"
                       class="w-full border-b border-brand-gray bg-transparent py-2 text-sm focus:border-brand-black outline-none transition-colors"

@@ -1,27 +1,44 @@
-import { mount } from '@vue/test-utils'
-import { describe, it, expect } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
+import { describe, it, expect, beforeEach } from 'vitest'
 import FilterBar from './FilterBar.vue'
 
 describe('FilterBar.vue', () => {
-  it('renders categories correctly', () => {
-    const wrapper = mount(FilterBar, {
-      props: { activeCategory: 'all' },
-    })
-
-    expect(wrapper.text()).toContain('outerwear')
-    expect(wrapper.text()).toContain('tops')
+  beforeEach(() => {
+    cleanup()
   })
 
-  it('emits select event when a category is clicked', async () => {
-    const wrapper = mount(FilterBar, {
+  it('renders all category options correctly', () => {
+    render(FilterBar, {
       props: { activeCategory: 'all' },
     })
 
-    const buttons = wrapper.findAll('button')
-    const topsButton = buttons.find((b) => b.text().includes('tops'))
+    expect(screen.getByText(/outerwear/i)).toBeTruthy()
+    expect(screen.getByText(/tops/i)).toBeTruthy()
+    expect(screen.getByText(/bottoms/i)).toBeTruthy()
+  })
 
-    await topsButton?.trigger('click')
+  it('marks the active category visually', () => {
+    render(FilterBar, {
+      props: { activeCategory: 'tops' },
+    })
 
-    expect(wrapper.emitted('select')?.[0]).toEqual(['tops'])
+    const topsButton = screen.getByRole('button', { name: /tops/i })
+
+    expect(topsButton.className).toContain('text-brand-black')
+  })
+
+  it('emits select event with correct category when clicked', async () => {
+    const user = userEvent.setup()
+    const { emitted } = render(FilterBar, {
+      props: { activeCategory: 'all' },
+    })
+
+    const outerwearButton = screen.getByRole('button', { name: /outerwear/i })
+
+    await user.click(outerwearButton)
+
+    expect(emitted()).toHaveProperty('select')
+    expect(emitted().select[0]).toEqual(['outerwear'])
   })
 })

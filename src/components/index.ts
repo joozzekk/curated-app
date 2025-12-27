@@ -1,0 +1,6 @@
+export { default as FilterBar } from './FilterBar/FilterBar.vue'
+export { default as GarmentModal } from './GarmentModal/GarmentModal.vue'
+export { default as AddGarmentPanel } from './AddGarmentPanel/AddGarmentPanel.vue'
+export { default as CoreToast } from './UI/CoreToast.vue'
+export { default as GarmentCard } from './UI/GarmentCard.vue'
+export { default as GarmentSkeleton } from './UI/GarmentSkeleton.vue'

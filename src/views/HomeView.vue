@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { Garment } from '@/types'
-import GarmentCard from '@/components/UI/GarmentCard.vue'
-import FilterBar from '@/components/FilterBar/FilterBar.vue'
-import GarmentModal from '@/components/GarmentModal/GarmentModal.vue'
-import CoreToast from '@/components/UI/CoreToast.vue'
-import AddGarmentPanel from '@/components/AddGarmentPanel/AddGarmentPanel.vue'
+import { FilterBar, GarmentModal, AddGarmentPanel, CoreToast } from '@/components'
 import { useWardrobeStore } from '@/stores/wardrobe'
-import GarmentSkeleton from '@/components/UI/GarmentSkeleton.vue'
 
 const isAddPanelOpen = ref(false)
 const wardrobe = useWardrobeStore()
