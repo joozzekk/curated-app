@@ -1,43 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { supabase } from '@/lib/supabase'
+import { ref, onMounted } from 'vue'
 import type { Garment } from '@/types'
 import GarmentCard from '@/components/GarmentCard.vue'
 import FilterBar from '@/components/FilterBar.vue'
 import GarmentModal from '@/components/GarmentModal.vue'
 import CoreToast from '@/components/CoreToast.vue'
 import AddGarmentPanel from '@/components/AddGarmentPanel.vue'
+import { useWardrobeStore } from '@/stores/wardrobe'
+import GarmentSkeleton from '@/components/GarmentSkeleton.vue'
 
-const garments = ref<Garment[]>([])
-const currentCategory = ref('all')
 const isAddPanelOpen = ref(false)
-const loading = ref(true)
+const wardrobe = useWardrobeStore()
 
-const fetchGarments = async () => {
-  loading.value = true
-  const { data, error } = await supabase
-    .from('garments')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Błąd pobierania:', error.message)
-  } else {
-    garments.value = data
-  }
-  loading.value = false
-}
-
-const filteredGarments = computed(() => {
-  if (currentCategory.value === 'all') return garments.value
-  return garments.value.filter((g) => g.category === currentCategory.value)
-})
-
-const selectedGarment = ref<Garment | null>(null)
 const isModalOpen = ref(false)
 
 const openModal = (garment: Garment) => {
-  selectedGarment.value = garment
+  wardrobe.selectGarment(garment)
   isModalOpen.value = true
 }
 
@@ -45,63 +23,74 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
-const handleUpdate = (newGarment: Garment) => {
-  selectedGarment.value = newGarment
-
-  const index = garments.value.findIndex((g) => g.id === newGarment.id)
-  if (index !== -1) {
-    garments.value[index] = newGarment
-  }
-}
-
-const handleDeleted = (id: string) => {
-  garments.value = garments.value.filter((g) => g.id !== id)
-}
-
 onMounted(() => {
-  fetchGarments()
+  wardrobe.fetchGarments()
 })
 </script>
 
 <template>
   <main class="bg-brand-white">
-    <button
-      @click="isAddPanelOpen = true"
-      class="text-[10px] flex my-4 mx-auto uppercase tracking-widest border border-brand-black px-4 py-2 hover:bg-brand-black hover:text-brand-white transition-all cursor-pointer"
-    >
-      + Add Piece
-    </button>
+    <Teleport to="#actions">
+      <button
+        @click="isAddPanelOpen = true"
+        class="text-[10px] flex my-4 mx-auto uppercase tracking-widest border border-brand-black px-4 py-2 hover:bg-brand-black hover:text-brand-white transition-all cursor-pointer"
+      >
+        + Add Piece
+      </button>
+    </Teleport>
 
-    <FilterBar :active-category="currentCategory" @select="(cat) => (currentCategory = cat)" />
+    <FilterBar
+      :active-category="wardrobe.currentCategory"
+      @select="(cat) => wardrobe.setCategory(cat)"
+    />
 
-    <div v-if="loading" class="flex justify-center py-20">
-      <p class="text-[10px] uppercase tracking-widest animate-pulse">Loading Collection...</p>
+    <div class="px-12 w-full relative">
+      <div v-if="wardrobe.loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <GarmentSkeleton v-for="n in 8" :key="n" />
+      </div>
+
+      <TransitionGroup
+        v-else-if="wardrobe.filteredGarments.length > 0"
+        name="grid"
+        tag="div"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative"
+      >
+        <GarmentCard
+          v-for="garment in wardrobe.filteredGarments"
+          :key="garment.id"
+          :garment="garment"
+          @click="openModal(garment)"
+        />
+      </TransitionGroup>
+
+      <div v-else class="flex flex-col items-center justify-center py-32 animate-fade-in">
+        <span class="text-[10px] uppercase tracking-[0.4em] text-brand-dark-gray mb-4">
+          Collection Empty
+        </span>
+        <p class="font-serif italic text-xl text-brand-black mb-8">
+          No items found in {{ wardrobe.currentCategory }}
+        </p>
+        <button
+          v-if="wardrobe.currentCategory !== 'all'"
+          @click="wardrobe.setCategory('all')"
+          class="text-[9px] uppercase tracking-widest underline underline-offset-8 opacity-60 hover:opacity-100 transition-opacity"
+        >
+          View All Categories
+        </button>
+      </div>
     </div>
 
-    <TransitionGroup
-      name="grid"
-      tag="div"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 px-12"
-    >
-      <GarmentCard
-        v-for="garment in filteredGarments"
-        :key="garment.id"
-        :garment="garment"
-        @click="openModal(garment)"
-      />
-    </TransitionGroup>
-
     <GarmentModal
-      :garment="selectedGarment"
+      :garment="wardrobe.selectedGarment"
       :is-open="isModalOpen"
       @close="closeModal"
-      @updated="handleUpdate"
-      @deleted="handleDeleted"
+      @updated="wardrobe.updateGarmentInList($event)"
+      @deleted="wardrobe.removeGarmentFromList($event)"
     />
     <AddGarmentPanel
       :is-open="isAddPanelOpen"
       @close="isAddPanelOpen = false"
-      @added="fetchGarments"
+      @added="wardrobe.fetchGarments"
     />
     <CoreToast />
   </main>
@@ -125,18 +114,18 @@ onMounted(() => {
 
 .grid-leave-active {
   position: absolute;
-  width: calc(100% - 6rem);
+  width: calc(100%);
 }
 
 @media (min-width: 768px) {
   .grid-leave-active {
-    width: calc((100% - 6rem - 3rem) / 2);
+    width: calc((100% - 3rem) / 2);
   }
 }
 
 @media (min-width: 1024px) {
   .grid-leave-active {
-    width: calc((100% - 6rem - 9rem) / 4);
+    width: calc((100% - 9rem) / 4);
   }
 }
 </style>

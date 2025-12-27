@@ -8,7 +8,7 @@ const toast = useToastStore()
     <Transition name="slide-fade">
       <div
         v-if="toast.isVisible"
-        class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 shadow-xl flex items-center gap-4"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 z-100 px-6 py-3 shadow-xl flex items-center gap-4"
         :class="
           toast.type === 'success' ? 'bg-brand-black text-brand-white' : 'bg-red-900 text-white'
         "

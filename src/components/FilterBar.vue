@@ -1,12 +1,21 @@
 <script setup lang="ts">
-const categories = ['all', 'outerwear', 'tops', 'bottoms', 'footwear'] as const
+import type { GarmentCategory } from '@/types'
+
+const categories = [
+  'all',
+  'tops',
+  'bottoms',
+  'outerwear',
+  'footwear',
+  'accessories',
+] as GarmentCategory[]
 
 defineProps<{
   activeCategory: string
 }>()
 
 defineEmits<{
-  (e: 'select', category: (typeof categories)[number]): void
+  (e: 'select', category: GarmentCategory): void
 }>()
 </script>
 
@@ -18,7 +27,7 @@ defineEmits<{
       v-for="cat in categories"
       :key="cat"
       @click="$emit('select', cat)"
-      class="relative text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-colors duration-300 pb-2 cursor-pointer flex-shrink-0"
+      class="relative text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-colors duration-300 pb-2 cursor-pointer shrink-0"
       :class="[
         activeCategory === cat
           ? 'text-brand-black font-semibold'

@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useToastStore } from '@/stores/toast'
+import { ToastType } from '@/types/toast'
 
 defineProps<{ isOpen: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'added'): void }>()
@@ -45,7 +46,7 @@ const resetForm = () => {
 
 const saveGarment = async () => {
   if (!form.name || !form.brand || !form.image_url) {
-    toast.show('Please fill in all required fields', 'error')
+    toast.show('Please fill in all required fields', ToastType.ERROR)
     return
   }
 
@@ -53,10 +54,10 @@ const saveGarment = async () => {
   const { error } = await supabase.from('garments').insert([form])
 
   if (error) {
-    toast.show('Error adding garment', 'error')
+    toast.show('Error adding garment', ToastType.ERROR)
     console.error(error.message)
   } else {
-    toast.show('New garment added to collection', 'success')
+    toast.show('New garment added to collection', ToastType.SUCCESS)
     resetForm()
     emit('added')
     emit('close')

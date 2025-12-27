@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { supabase } from '@/lib/supabase'
-import type { Garment } from '@/types'
+import { type Garment } from '@/types'
 import { useToastStore } from '@/stores/toast'
 import { ref } from 'vue'
+import { ToastType } from '@/types/toast'
 
 const toast = useToastStore()
 const isDeleting = ref(false)
@@ -29,14 +30,21 @@ const markAsWorn = async () => {
       last_worn: new Date().toISOString(),
     })
     .eq('id', props.garment.id)
-    .select() // Ważne: pobieramy świeże dane z bazy
+    .select()
 
   if (error) {
-    toast.show('Error updating garment', 'error')
+    toast.show('Error updating', ToastType.ERROR)
   } else if (data && data[0]) {
-    toast.show('Garment updated!', 'success')
+    toast.show('Updated!', ToastType.SUCCESS)
     emit('updated', data[0])
   }
+}
+
+const closeModal = () => {
+  isDeleting.value = false
+  showConfirm.value = false
+
+  emit('close')
 }
 
 const deleteGarment = async () => {
@@ -46,12 +54,12 @@ const deleteGarment = async () => {
   const { error } = await supabase.from('garments').delete().eq('id', props.garment.id)
 
   if (error) {
-    toast.show('Error deleting item', 'error')
+    toast.show('Error deleting item', ToastType.ERROR)
     isDeleting.value = false
   } else {
-    toast.show('Item removed from collection', 'success')
+    toast.show('Item removed from collection', ToastType.SUCCESS)
     emit('deleted', props.garment.id)
-    emit('close')
+    closeModal()
   }
 }
 </script>
@@ -64,14 +72,14 @@ const deleteGarment = async () => {
       >
         <div
           class="absolute inset-0 bg-black/60 backdrop-blur-md hover:cursor-pointer"
-          @click="emit('close')"
+          @click="closeModal"
         />
 
         <div
           class="relative w-full h-full md:h-auto md:max-w-4xl bg-brand-white overflow-y-auto md:overflow-hidden shadow-2xl flex flex-col md:flex-row animate-slide-up"
         >
           <button
-            @click="emit('close')"
+            @click="closeModal"
             class="fixed md:absolute top-6 right-6 z-50 text-brand-black bg-brand-white/80 p-2 rounded-full md:bg-transparent md:p-0 transition-transform active:scale-90 cursor-pointer"
           >
             <svg

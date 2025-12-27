@@ -4,6 +4,7 @@ export enum GarmentCategory {
   Outerwear = 'outerwear',
   Footwear = 'footwear',
   Accessories = 'accessories',
+  All = 'all',
 }
 
 export interface Garment {
@@ -16,11 +17,4 @@ export interface Garment {
   times_worn: number
   last_worn: string | null
   purchase_price: number
-}
-
-export interface Outfit {
-  id: string
-  name: string
-  items: Garment[]
-  created_at: Date
 }
