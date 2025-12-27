@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { Garment } from '@/types'
-import { FilterBar, GarmentModal, AddGarmentPanel, CoreToast } from '@/components'
+import {
+  FilterBar,
+  GarmentModal,
+  AddGarmentPanel,
+  CoreToast,
+  GarmentCard,
+  GarmentSkeleton,
+} from '@/components'
 import { useWardrobeStore } from '@/stores/wardrobe'
 
 const isAddPanelOpen = ref(false)
