@@ -8,12 +8,11 @@
       >
         Curated
       </h1>
+
       <p class="text-center font-serif mt-2">Your new outfit for every occasion</p>
     </header>
 
-    <main>
-      <router-view />
-    </main>
+    <router-view />
 
     <footer class="mt-auto text-center w-full text-xs py-2">
       <p>© 2024 Curated App</p>

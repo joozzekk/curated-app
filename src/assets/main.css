@@ -4,4 +4,17 @@
 @theme {
   --font-serif: 'Playfair Display', serif;
   --font-sans: 'Inter', sans-serif;
+
+  /* Colors */
+  --color-brand-white: #fafafa;
+  --color-brand-black: #121212;
+  --color-brand-gray: #e5e5e5;
+  --color-brand-dark-gray: #717171;
+
+  /* Fonts */
+  --font-sans: 'Inter', 'sans-serif';
+  --font-serif: 'Playfair Display', 'serif';
+
+  /* Letter Spacing */
+  --letter-spacing-widest: 0.2em;
 }

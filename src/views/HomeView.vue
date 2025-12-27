@@ -1,62 +1,142 @@
 <script setup lang="ts">
-import GarmentCard from '@/components/GarmentCard.vue'
+import { ref, onMounted, computed } from 'vue'
+import { supabase } from '@/lib/supabase'
 import type { Garment } from '@/types'
-import { reactive } from 'vue'
+import GarmentCard from '@/components/GarmentCard.vue'
+import FilterBar from '@/components/FilterBar.vue'
+import GarmentModal from '@/components/GarmentModal.vue'
+import CoreToast from '@/components/CoreToast.vue'
+import AddGarmentPanel from '@/components/AddGarmentPanel.vue'
 
-const garments = reactive<Garment[]>([
-  {
-    id: '1',
-    name: 'Fluffy Jacket',
-    imageUrl:
-      'https://img.ltwebstatic.com/v4/j/pi/2025/12/10/ad/1765361064ec107c6e9ba17e1d3f2ae008255d5be8_thumbnail_405x.webp',
-    brand: 'CozyWear',
-    category: 'outerwear',
-    color: 'black',
-    timesWorn: 3,
-    lastWorn: new Date('2024-12-01'),
-    purchasePrice: 89.99,
-  },
-  {
-    id: '2',
-    name: 'Black Joggers',
-    imageUrl:
-      'https://boutique-warszawa.com/cdn/shop/files/image_5_3cf3f0b5-559c-4270-80c3-6186705900fe.png?v=1761828444&width=5000',
-    brand: 'Boutique Warszawa',
-    category: 'bottoms',
-    color: 'black',
-    timesWorn: 3,
-    lastWorn: new Date('2024-12-01'),
-    purchasePrice: 89.99,
-  },
-  {
-    id: '3',
-    name: 'White Jordans',
-    imageUrl:
-      'https://storamore.pl/images/sh193/237000-238000/Air-Jordan-4-308497-100-Biale_%5B237839%5D_1200.jpg',
-    brand: 'Staramore',
-    category: 'footwear',
-    color: 'white',
-    timesWorn: 1,
-    lastWorn: new Date('2025-12-30'),
-    purchasePrice: 109.99,
-  },
-  {
-    id: '4',
-    name: "White Levi's T-Shirt",
-    imageUrl:
-      'https://img.kwcdn.com/product/open/6cac1dcfd8cb4142a4ffa5d761786239-goods.jpeg?imageView2/2/w/800/q/70/format/avif',
-    brand: "Levi's",
-    category: 'tops',
-    color: 'white',
-    timesWorn: 1,
-    lastWorn: new Date('2025-12-28'),
-    purchasePrice: 79.99,
-  },
-])
+const garments = ref<Garment[]>([])
+const currentCategory = ref('all')
+const isAddPanelOpen = ref(false)
+const loading = ref(true)
+
+const fetchGarments = async () => {
+  loading.value = true
+  const { data, error } = await supabase
+    .from('garments')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Błąd pobierania:', error.message)
+  } else {
+    garments.value = data
+  }
+  loading.value = false
+}
+
+const filteredGarments = computed(() => {
+  if (currentCategory.value === 'all') return garments.value
+  return garments.value.filter((g) => g.category === currentCategory.value)
+})
+
+const selectedGarment = ref<Garment | null>(null)
+const isModalOpen = ref(false)
+
+const openModal = (garment: Garment) => {
+  selectedGarment.value = garment
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+}
+
+const handleUpdate = (newGarment: Garment) => {
+  selectedGarment.value = newGarment
+
+  const index = garments.value.findIndex((g) => g.id === newGarment.id)
+  if (index !== -1) {
+    garments.value[index] = newGarment
+  }
+}
+
+const handleDeleted = (id: string) => {
+  garments.value = garments.value.filter((g) => g.id !== id)
+}
+
+onMounted(() => {
+  fetchGarments()
+})
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-8 py-12">
-    <GarmentCard v-for="garment in garments" :key="garment.id" :garment="garment" />
-  </div>
+  <main class="bg-brand-white">
+    <button
+      @click="isAddPanelOpen = true"
+      class="text-[10px] flex my-4 mx-auto uppercase tracking-widest border border-brand-black px-4 py-2 hover:bg-brand-black hover:text-brand-white transition-all cursor-pointer"
+    >
+      + Add Piece
+    </button>
+
+    <FilterBar :active-category="currentCategory" @select="(cat) => (currentCategory = cat)" />
+
+    <div v-if="loading" class="flex justify-center py-20">
+      <p class="text-[10px] uppercase tracking-widest animate-pulse">Loading Collection...</p>
+    </div>
+
+    <TransitionGroup
+      name="grid"
+      tag="div"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 px-12"
+    >
+      <GarmentCard
+        v-for="garment in filteredGarments"
+        :key="garment.id"
+        :garment="garment"
+        @click="openModal(garment)"
+      />
+    </TransitionGroup>
+
+    <GarmentModal
+      :garment="selectedGarment"
+      :is-open="isModalOpen"
+      @close="closeModal"
+      @updated="handleUpdate"
+      @deleted="handleDeleted"
+    />
+    <AddGarmentPanel
+      :is-open="isAddPanelOpen"
+      @close="isAddPanelOpen = false"
+      @added="fetchGarments"
+    />
+    <CoreToast />
+  </main>
 </template>
+
+<style scoped>
+.grid-enter-active,
+.grid-leave-active {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.grid-enter-from,
+.grid-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.grid-move {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.grid-leave-active {
+  position: absolute;
+  width: calc(100% - 6rem);
+}
+
+@media (min-width: 768px) {
+  .grid-leave-active {
+    width: calc((100% - 6rem - 3rem) / 2);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-leave-active {
+    width: calc((100% - 6rem - 9rem) / 4);
+  }
+}
+</style>

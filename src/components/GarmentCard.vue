@@ -10,7 +10,7 @@ defineProps<{
   <div class="group cursor-pointer">
     <div class="relative aspect-3/4 overflow-hidden bg-brand-gray">
       <img
-        :src="garment.imageUrl"
+        :src="garment.image_url"
         :alt="garment.name"
         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
