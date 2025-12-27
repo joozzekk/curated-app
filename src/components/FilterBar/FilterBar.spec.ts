@@ -39,6 +39,6 @@ describe('FilterBar.vue', () => {
     await user.click(outerwearButton)
 
     expect(emitted()).toHaveProperty('select')
-    expect(emitted().select[0]).toEqual(['outerwear'])
+    expect(emitted().select?.[0]).toEqual(['outerwear'])
   })
 })
