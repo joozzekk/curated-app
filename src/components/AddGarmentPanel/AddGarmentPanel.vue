@@ -19,7 +19,6 @@ const selectCategory = (cat: (typeof categories)[number]) => {
   isDropdownOpen.value = false
 }
 
-// Zamykanie dropdowna przy kliknięciu poza nim
 const handleClickOutside = (event: MouseEvent) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     isDropdownOpen.value = false
